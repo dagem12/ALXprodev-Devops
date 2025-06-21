@@ -1,0 +1,7 @@
+#!/bin/bash
+
+URL="https://pokeapi.co/api/v2/pokemon/pikachu"
+OUTPUT="data.json"
+ERROR_FILE="errors.txt"
+
+curl -s -f "$URL" -o "$OUTPUT" || echo "[$(date)] Failed to fetch Pikachu data." >> "$ERROR_FILE"
