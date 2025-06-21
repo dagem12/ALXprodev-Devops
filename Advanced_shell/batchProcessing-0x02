@@ -8,12 +8,21 @@ mkdir -p "$DATA_DIR"
 
 for NAME in "${POKEMON_LIST[@]}"; do
   echo "Fetching data for $NAME..."
-  RESPONSE=$(curl -s -f "https://pokeapi.co/api/v2/pokemon/$NAME")
-  if [ $? -eq 0 ]; then
-    echo "$RESPONSE" > "$DATA_DIR/${NAME}.json"
-    echo "Saved data to $DATA_DIR/${NAME}.json ✅"
-  else
-    echo "[$(date)] Failed to fetch $NAME data." >> "$ERROR_FILE"
+  ATTEMPTS=0
+  SUCCESS=0
+  while [ $ATTEMPTS -lt 3 ]; do
+    if curl -s -f "https://pokeapi.co/api/v2/pokemon/$NAME" -o "$DATA_DIR/${NAME}.json"; then
+      echo "Saved data to $DATA_DIR/${NAME}.json ✅"
+      SUCCESS=1
+      break
+    else
+      ((ATTEMPTS++))
+      echo "Attempt $ATTEMPTS for $NAME failed."
+      sleep 2
+    fi
+  done
+  if [ $SUCCESS -eq 0 ]; then
+    echo "[$(date)] Failed to fetch $NAME after 3 attempts." >> "$ERROR_FILE"
   fi
-  sleep 1  # To handle potential rate-limiting
+  sleep 1
 done
