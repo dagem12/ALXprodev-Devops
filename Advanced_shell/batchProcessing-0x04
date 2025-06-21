@@ -3,11 +3,12 @@
 POKEMON_LIST=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
 DATA_DIR="pokemon_data"
 ERROR_FILE="errors.txt"
+PIDS=()
 
 mkdir -p "$DATA_DIR"
 
 fetch_pokemon() {
-  NAME=$1
+  local NAME=$1
   echo "Fetching data for $NAME..."
   if curl -s -f "https://pokeapi.co/api/v2/pokemon/$NAME" -o "$DATA_DIR/${NAME}.json"; then
     echo "Saved data to $DATA_DIR/${NAME}.json ✅"
@@ -18,7 +19,17 @@ fetch_pokemon() {
 
 for NAME in "${POKEMON_LIST[@]}"; do
   fetch_pokemon "$NAME" &
+  PIDS+=($!)
 done
 
-wait  # Wait for all background processes to finish
+jobs
+
+for PID in "${PIDS[@]}"; do
+  wait "$PID" || echo "Process $PID failed." >> "$ERROR_FILE"
+done
+
+for JOB in $(jobs -p); do
+  kill "$JOB" 2>/dev/null
+done
+
 echo "All Pokémon data fetched."
